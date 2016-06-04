@@ -17,14 +17,16 @@
 const int outPin = 9;
 const int pumpLOW = 0;
 const int pumpHIGH = 30;
+unsigned long gotosleep = 1000L * 60L ;
 
 const int LEDPIN=13;
 
 void setup() {
-  Serial.begin(57600);
+//  Serial.begin(57600);
   pinMode(outPin, OUTPUT);
   pinMode(LEDPIN, OUTPUT);
   Bridge.begin();
+  setupRequest();
 }
 void onAndOff() {
   analogWrite(outPin, pumpLOW);
@@ -36,22 +38,24 @@ void onAndOff() {
 void twoSecondsPump(){
   waterRequest(true);
   analogWrite(outPin, pumpHIGH);
-  delay(2000);
+  delay(5000);
   analogWrite(outPin, pumpLOW);
   waterRequest(false);
 }
   
 
 int readSensor() {
-  /*
-  int value = analogRead(0);
-  Serial.println(value);
-  return value;
-  */
   
-  int p = random(0,700);
+  int value = analogRead(0);
+/*  Serial.println(value);*/
+  sensorRequest(value);
+  return value;
+  
+  /*
+  int p = random(0,800);
   sensorRequest(p);
   return p;
+  */
 }
 
 void sensorRequest(int sensorValue){
@@ -59,7 +63,7 @@ void sensorRequest(int sensorValue){
     client.setHeader("Content-Type: application/json");
     String sensorValueString=String(sensorValue);
     String message = "{	\"type\": \"SENSOR\",	\"value\" : \" "+sensorValueString+" \"}";
-    String url = "http://192.168.1.131/event";
+    String url = "http://192.168.1.101:9000/event";
     client.post(url, message);
 }
 
@@ -72,46 +76,24 @@ void waterRequest(bool on){
     }else{
        message = "{	\"type\": \"WATER_OFF\",	\"value\" : \" 0 \"}";
     }
-    String url = "http://192.168.1.131/event";
+    String url = "http://192.168.1.101:9000/event";
     client.post(url, message);
 }
 
-void req() {
-  // Initialize the client library
+void setupRequest() {
   HttpClient client;
-
-  // Make a HTTP request:
-//  client.get("http://192.168.1.131/event");
   client.setHeader("Content-Type: application/json");
-  client.post("http://192.168.1.131/event", "{	\"type\": \"SETUP\",	\"value\" : \"1234\"}");
-
-//  client.addHeader();  
-
-  // if there are incoming bytes available
-  // from the server, read them and print them:
-  /*
-  while (client.available()) {
-    char c = client.read();
-    Serial.print(c);
-  }
-  Serial.flush();
-*/
-  delay(5000);
+  client.post("http://192.168.1.101:9000/event", "{	\"type\": \"SETUP\",	\"value\" : \"\"}");
 }
 
 
 
 void loop() {
   int sensor = readSensor();
-  Serial.println("SENSOR = "+sensor);
-  Serial.flush();
-  
+  //Serial.println("SENSOR = "+sensor);
+//  Serial.flush();
   if(sensor < 300){
     twoSecondsPump();
   }
-  delay(5000);
-
-
-
-
+  delay(gotosleep);
 }
