@@ -6,6 +6,12 @@ import datetime
 
 class Event(object):
 
+    def printMsg(self,msg):
+        f = open('api.log','w')
+        f.write(msg+"\n")
+        f.close()
+
+
     def on_get(self, req, resp):
         now = datetime.datetime.now();
         querydate = now - datetime.timedelta(days=1)
@@ -19,7 +25,8 @@ class Event(object):
             minute = int(arrdate[2].split(" ")[1].split(":")[1]);
             second = int(arrdate[2].split(" ")[1].split(":")[2]);
             querydate = datetime.datetime(year,month,day,hour,minute,second);
-        printMsg("Request ::: "+querydate) ;
+	msg = "Request ::: "+str(querydate);
+        self.printMsg(msg) ;
         dummy_id = ObjectId.from_datetime(querydate)
         result = EventModel.objects(id__gt = dummy_id)[:100];
        	json_string = json.dumps([r.obj_dict() for r in result])
@@ -32,13 +39,9 @@ class Event(object):
         if not body:
         	raise falcon.HTTPBadRequest('Empty request body' , 'Need valid JSON');
         content = json.loads(body.decode('UTF-8'))
-        printMsg(content);
+        self.printMsg(content);
         eventModel = EventModel();
         eventModel.from_json(content);
         eventModel.save();
         resp.status = falcon.HTTP_200;
 
-    def printMsg(msg):
-        f = open('api.log','w')
-        f.write('hi there\n')
-        f.close()
